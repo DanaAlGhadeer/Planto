@@ -1,36 +1,47 @@
 //
-//  EditRemainderSheet.swift
+//  SetRemainderSheet.swift
 //  Planto
 //
-//  Created by Dana AlGhadeer on 24/10/2025.
+//  Created by Dana AlGhadeer on 23/10/2025.
 //
+
 import SwiftUI
 
-struct EditReminderSheet: View {
-    // MARK: - Binding
-    @Binding var plant: Plant  // We pass the whole plant to edit
 
-    // MARK: - Callbacks
-    var onSave: ((Plant) -> Void)? = nil
-    var onDelete: ((Plant) -> Void)? = nil
+struct SetReminderSheet: View {
+    var mode: SheetMode
+    
+    //MARK: - Binding
+    // Two-way binding Values shared with the parent
+    @Binding var plantName: String
+    @Binding var room: Room
+    @Binding var light: Light
+    @Binding var wateringDays: WateringDays
+    @Binding var water: Water
 
-    // MARK: - Controls
+    // Callback to notify parent when a plant is saved
+    var onSave: (Plant) -> Void
+    var onDelete: (() -> Void)? = nil
+    
+    // Access the environment's dismiss action to close the sheet
     @Environment(\.dismiss) private var dismiss
+    
     @State private var showValidationAlert = false
-    @State private var showDeleteAlert = false
 
-    // MARK: - Helpers
+
+    // Checks if plant name is filled
     var canSave: Bool {
-        !plant.name.trimmingCharacters(in: .whitespaces).isEmpty
+        return !plantName.trimmingCharacters(in: .whitespaces).isEmpty
+        // ^ True if plantName is not just spaces
     }
-
-    // MARK: - Body
+    //MARK: - Body
     var body: some View {
         NavigationStack {
             VStack {
-                // Header
                 HStack(spacing: 80) {
-                    Button(action: { dismiss() }) {
+                    Button(action: {
+                        dismiss()
+                    }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 22))
                             .foregroundColor(.white)
@@ -38,15 +49,25 @@ struct EditReminderSheet: View {
                     }
                     .buttonStyle(.glass)
 
-                    Text("Edit Reminder")
+                    Text("Set Reminder")
                         .font(.system(size: 17, weight: .bold))
 
                     Button(action: {
                         if canSave {
-                            onSave?(plant)
+                            // Build a Plant and notify parent
+                            let newPlant = Plant(
+                                name: plantName,
+                                room: room,
+                                light: light,
+                                wateringDays: wateringDays,
+                                water: water,
+                                isWatered: false
+                            )
+                            onSave(newPlant)
+                            // Dismiss the sheet
                             dismiss()
-                        } else {
-                            showValidationAlert = true
+                        } else { // If invalid
+                            showValidationAlert = true // Show alert asking for a plant name
                         }
                     }) {
                         Image(systemName: "checkmark")
@@ -56,24 +77,25 @@ struct EditReminderSheet: View {
                     }
                     .buttonStyle(.glassProminent)
                     .tint(Color.mintG)
-                    .disabled(!canSave)
+                    .disabled(!canSave) // Disable the button when form is invalid
+                    
                 }
                 .padding(.top, 10)
 
-                // Form
+                //MARK: - Form
                 Form {
                     Section {
                         LabeledContent("Plant Name") {
-                            TextField("Pothos", text: $plant.name)
-                                .textInputAutocapitalization(.words)
-                                .disableAutocorrection(true)
-                                .submitLabel(.done)
+                            TextField("Pothos", text: $plantName)
+                                .textInputAutocapitalization(.words) // Capitalize words for names
+                                .disableAutocorrection(true) // Disable autocorrect for names
+                                .submitLabel(.done) // Show "Done" on the keyboard
                         }
                     }
 
                     Section {
                         LabeledContent {
-                            Picker("", selection: $plant.room) {
+                            Picker("", selection: $room) {
                                 ForEach(Room.allCases) { option in
                                     Text(option.title).tag(option)
                                 }
@@ -85,7 +107,7 @@ struct EditReminderSheet: View {
                         }
 
                         LabeledContent {
-                            Picker("", selection: $plant.light) {
+                            Picker("", selection: $light) {
                                 ForEach(Light.allCases) { option in
                                     Text(option.title).tag(option)
                                 }
@@ -99,7 +121,7 @@ struct EditReminderSheet: View {
 
                     Section {
                         LabeledContent {
-                            Picker("", selection: $plant.wateringDays) {
+                            Picker("", selection: $wateringDays) {
                                 ForEach(WateringDays.allCases) { option in
                                     Text(option.title).tag(option)
                                 }
@@ -111,7 +133,7 @@ struct EditReminderSheet: View {
                         }
 
                         LabeledContent {
-                            Picker("", selection: $plant.water) {
+                            Picker("", selection: $water) {
                                 ForEach(Water.allCases) { option in
                                     Text(option.title).tag(option)
                                 }
@@ -122,31 +144,25 @@ struct EditReminderSheet: View {
                                 .foregroundColor(.white)
                         }
                     }
-
-                    // Delete Button Section
-                    Section {
+                    
+                    if mode == .edit {
                         Button(role: .destructive) {
-                            showDeleteAlert = true
+                            onDelete?()
+                            dismiss()
                         } label: {
                             Text("Delete Reminder")
-                                .frame(maxWidth: .infinity)
+                                .foregroundColor(Color.redDel)
+                                .frame(width: 400)
                         }
                     }
                 }
             }
 
-            // Alerts
+            //MARK: -  Alert if name empty
             .alert("Please enter a plant name.", isPresented: $showValidationAlert) {
                 Button("OK", role: .cancel) { }
             }
 
-            .alert("Delete this reminder?", isPresented: $showDeleteAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Delete", role: .destructive) {
-                    onDelete?(plant)
-                    dismiss()
-                }
-            }
 
             .presentationDetents([.large])
         }

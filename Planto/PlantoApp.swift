@@ -9,9 +9,17 @@ import SwiftUI
 
 @main
 struct PlantoApp: App {
+    
+    @StateObject private var store = PlantStore()
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            NavigationStack{
+                ContentView()
+            }
+            .onAppear {
+                NotificationManager.instance.requestAuthorization()
+            }
+            .environmentObject(store)
         }
     }
 }

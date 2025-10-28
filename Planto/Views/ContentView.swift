@@ -25,7 +25,7 @@ struct ContentView: View {
     }
     
     var body: some View {
-        NavigationStack{
+
             ZStack(alignment: .topLeading){
                 Color.black
                     .ignoresSafeArea()
@@ -59,7 +59,7 @@ struct ContentView: View {
                         .font(.system(size: 16))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
+                        .padding(.horizontal, 20)
                     
                     Spacer()
                     
@@ -81,10 +81,10 @@ struct ContentView: View {
             .navigationDestination(isPresented: $goToTodayReminder) {
                 TodayReminder()
             }
-}
-        // Present the SetRemainderSheet
+
+        // Present the SetReminderSheet
         .sheet(isPresented: $showSetReminderSheet){
-            SetRemainderSheet(
+            SetReminderSheet(
                 mode: .add,
                 plantName: $plantName,
                 room: $room,
@@ -98,14 +98,6 @@ struct ContentView: View {
                     DispatchQueue.main.async {
                         goToTodayReminder = true
                     }
-                    // Reset form state for next time
-                    plantName = ""
-                    room = .bedroom
-                    light = .fullSun
-                    wateringDays = .everyDay
-                    water = .ml20to50
-                    // Trigger navigation to TodayReminder
-                    goToTodayReminder = true
                 }
             )
         }
@@ -113,5 +105,10 @@ struct ContentView: View {
 }
 
 #Preview {
-    NavigationStack{ ContentView() }
+    NavigationStack {
+        ContentView()
+    }
+    
+    .environmentObject(PlantStore())
 }
+
