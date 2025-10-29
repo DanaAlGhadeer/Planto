@@ -76,7 +76,7 @@ final class NotificationManager {
     private func daysToSeconds(_ days: Int) -> Double {
         switch days {
         case 1:
-            return 10
+            return 1 * 24 * 60 * 60
         case 2:
             return 2 * 24 * 60 * 60
         case 3:
